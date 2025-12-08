@@ -4,7 +4,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import connectDB from "./src/config/db/db.js";
-
+import authRoutes from "./src/routes/auth.routes.js"
+import resetPasswordRoutes from "./src/routes/resetPassword.routes.js"
+import jobsRoutes from "./src/routes/jobs.route.js"
 dotenv.config();
 
 const app = express();
@@ -24,8 +26,15 @@ app.use(cookieParser());
 
 // Base route
 app.get("/", (req, res) => {
-  res.send("Welcome to Crypto Academie Backend");
+  res.send("Welcome to the Traids API");
 });
+
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/reset-password", resetPasswordRoutes);
+app.use("/api/jobs", jobsRoutes);
+
+
 
 // Global error handler
 app.use((err, req, res, next) => {

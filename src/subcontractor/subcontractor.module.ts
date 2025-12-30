@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
-import { Subcontractor, SubcontractorSchema } from './subcontractor.schema';
+import { Subcontractor, SubcontractorSchema } from './schema/subcontractor.schema';
 import { SubcontractorService } from './subcontractor.service';
 import { SubcontractorController } from './subcontractor.controller';
 

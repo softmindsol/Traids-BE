@@ -2,11 +2,11 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Company, CompanyDocument } from '../company/company.schema';
+import { Company, CompanyDocument } from '../company/schema/company.schema';
 import {
   Subcontractor,
   SubcontractorDocument,
-} from '../subcontractor/subcontractor.schema';
+} from '../subcontractor/schema/subcontractor.schema';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyResetTokenDto } from './dto/verify-reset-token.dto';

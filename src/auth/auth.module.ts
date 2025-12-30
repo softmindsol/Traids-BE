@@ -3,11 +3,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { Company, CompanySchema } from '../company/company.schema';
+import { Company, CompanySchema } from '../company/schema/company.schema';
 import {
   Subcontractor,
   SubcontractorSchema,
-} from '../subcontractor/subcontractor.schema';
+} from '../subcontractor/schema/subcontractor.schema';
 import { EmailService } from '../common/service/email.service';
 
 @Module({

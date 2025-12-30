@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { Model } from 'mongoose';
-import { Company, CompanyDocument } from './company.schema';
+import { Company, CompanyDocument } from './schema/company.schema';
 import { SignUpCompanyDto } from './dto/signup-company.dto';
 import * as bcrypt from 'bcrypt';
 

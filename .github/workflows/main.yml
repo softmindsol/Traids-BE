@@ -3,27 +3,30 @@ name: Traids Backend CI/CD
 on:
   push:
     branches:
-      - main  # Trigger on push to main branch
-  workflow_dispatch:  # Allow manual trigger
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: self-hosted
+
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Notify Slack - Deployment Started
-        uses: rtCamp/action-slack-notify@v2
+      - name: Send Slack - Deployment Started
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"attachments":[{"color":"#FFA500","text":":rocket: Deployment started for *traids-backend*"}]}' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          msg: ":rocket: Deployment started for *traids-backend*"
-          status: custom
-          color: "#FFA500" # Orange for start
+          node-version: '18'
 
       - name: Copy .env file
-        run: |
-          cp /var/www/traids-envs/traids-env-be .env
+        run: cp /var/www/traids-envs/traids-env-be .env
 
       - name: Install dependencies
         run: npm install
@@ -34,20 +37,16 @@ jobs:
       - name: Start application with PM2
         run: pm2 start npm --name "traids-backend" -- start
 
-      - name: Notify Slack - Deployment Success
+      - name: Send Slack - Deployment Success
         if: success()
-        uses: rtCamp/action-slack-notify@v2
-        with:
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          msg: ":white_check_mark: Deployment successful for *traids-backend*"
-          status: custom
-          color: "#36A64F" # Green for success
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"attachments":[{"color":"#36A64F","text":":white_check_mark: Deployment successful for *traids-backend*"}]}' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
-      - name: Notify Slack - Deployment Failure
+      - name: Send Slack - Deployment Failure
         if: failure()
-        uses: rtCamp/action-slack-notify@v2
-        with:
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          msg: ":x: Deployment failed for *traids-backend*"
-          status: custom
-          color: "#FF0000" # Red for failure
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"attachments":[{"color":"#FF0000","text":":x: Deployment failed for *traids-backend*"}]}' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}

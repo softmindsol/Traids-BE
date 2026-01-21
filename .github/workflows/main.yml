@@ -1,0 +1,53 @@
+name: Traids Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to main branch
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Notify Slack - Deployment Started
+        uses: rtCamp/action-slack-notify@v2
+        with:
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          msg: ":rocket: Deployment started for *traids-backend*"
+          status: custom
+          color: "#FFA500" # Orange for start
+
+      - name: Copy .env file
+        run: |
+          cp /var/www/traids-envs/traids-env-be .env
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Stop previous PM2 process
+        run: pm2 stop traids-backend || true
+
+      - name: Start application with PM2
+        run: pm2 start npm --name "traids-backend" -- start
+
+      - name: Notify Slack - Deployment Success
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        with:
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          msg: ":white_check_mark: Deployment successful for *traids-backend*"
+          status: custom
+          color: "#36A64F" # Green for success
+
+      - name: Notify Slack - Deployment Failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        with:
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          msg: ":x: Deployment failed for *traids-backend*"
+          status: custom
+          color: "#FF0000" # Red for failure

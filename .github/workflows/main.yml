@@ -20,11 +20,6 @@ jobs:
           --data '{"attachments":[{"color":"#FFA500","text":":rocket: Deployment started for *traids-backend*"}]}' \
           ${{ secrets.SLACK_WEBHOOK_URL }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
       - name: Copy .env file
         run: cp /var/www/traids-envs/traids-env-be .env
 

@@ -27,8 +27,14 @@ export class Subcontractor {
   @Prop({ required: true })
   cityLocation: string;
 
-  @Prop({ type: [String], default: [] })
-  cscsCards: string[];
+  @Prop({ type: { documents: [String], expiresAt: Date }, default: { documents: [], expiresAt: null } })
+  insurance: { documents: string[]; expiresAt?: Date };
+
+  @Prop({ type: { documents: [String], expiresAt: Date }, default: { documents: [], expiresAt: null } })
+  tickets: { documents: string[]; expiresAt?: Date };
+
+  @Prop({ type: { documents: [String], expiresAt: Date }, default: { documents: [], expiresAt: null } })
+  certification: { documents: string[]; expiresAt?: Date };
 
   @Prop()
   profileImage: string;

@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { Company, CompanySchema } from './schema/company.schema';
 import { CompanyService } from './company.service';
 import { CompanyController } from './company.controller';
+import { S3UploadService } from '../common/service/s3-upload.service';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { CompanyController } from './company.controller';
     }),
   ],
   controllers: [CompanyController],
-  providers: [CompanyService],
+  providers: [CompanyService, S3UploadService],
   exports: [CompanyService],
 })
 export class CompanyModule {}

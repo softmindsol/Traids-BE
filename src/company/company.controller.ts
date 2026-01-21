@@ -4,7 +4,10 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CompanyService } from './company.service';
 import { SignUpCompanyDto } from './dto/signup-company.dto';
 
@@ -13,7 +16,22 @@ export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
   @Post('signup')
-  async signUp(@Body() signUpCompanyDto: SignUpCompanyDto) {
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'companyDocuments', maxCount: 10 },
+      { name: 'insuranceCertificate', maxCount: 1 },
+      { name: 'healthAndSafetyPolicy', maxCount: 1 },
+    ]),
+  )
+  async signUp(
+    @Body() signUpCompanyDto: SignUpCompanyDto,
+    @UploadedFiles()
+    files: {
+      companyDocuments?: Express.Multer.File[];
+      insuranceCertificate?: Express.Multer.File[];
+      healthAndSafetyPolicy?: Express.Multer.File[];
+    },
+  ) {
     // Check if company already exists
     const existingCompanyByEmail = await this.companyService.findByEmail(
       signUpCompanyDto.workEmail,
@@ -36,7 +54,7 @@ export class CompanyController {
       );
     }
 
-    const company = await this.companyService.signUp(signUpCompanyDto);
+    const company = await this.companyService.signUp(signUpCompanyDto, files);
 
     return {
       message: 'Company registered successfully',

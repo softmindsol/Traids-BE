@@ -4,7 +4,9 @@ export class SignUpSubcontractorDto {
   yearsOfExperience?: number;
   postcode: string;
   cityLocation: string;
-  cscsCards?: string[];
+  insurance?: { documents: string[]; expiresAt?: Date };
+  tickets?: { documents: string[]; expiresAt?: Date };
+  certification?: { documents: string[]; expiresAt?: Date };
   profileImage?: string;
   hourlyRate: number;
   password: string;

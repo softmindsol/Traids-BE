@@ -8,7 +8,10 @@ import {
   HttpStatus,
   HttpCode,
   Query,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { JobService } from './job.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { FilterJobsDto } from './dto/filter-jobs.dto';
@@ -23,8 +26,13 @@ export class JobController {
   @Post()
   @UseGuards(JwtAuthGuard, AdminGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createJob(@Body() createJobDto: CreateJobDto, @Request() req) {
-    const job = await this.jobService.createJob(createJobDto, req.user.sub);
+  @UseInterceptors(FilesInterceptor('documents', 10))
+  async createJob(
+    @Body() createJobDto: CreateJobDto,
+    @Request() req,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    const job = await this.jobService.createJob(createJobDto, req.user.sub, files);
     
     return {
       message: 'Job created successfully',

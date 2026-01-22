@@ -3,13 +3,31 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Job, JobDocument } from './schema/job.schema';
 import { CreateJobDto } from './dto/create-job.dto';
+import { S3UploadService } from '../common/service/s3-upload.service';
 
 @Injectable()
 export class JobService {
-  constructor(@InjectModel(Job.name) private jobModel: Model<JobDocument>) {}
+  constructor(
+    @InjectModel(Job.name) private jobModel: Model<JobDocument>,
+    private s3UploadService: S3UploadService,
+  ) {}
 
-  async createJob(createJobDto: CreateJobDto, userId: string): Promise<Job> {
+  async createJob(
+    createJobDto: CreateJobDto,
+    userId: string,
+    files?: Express.Multer.File[],
+  ): Promise<Job> {
     try {
+      let documentUrls: string[] = [];
+
+      // Upload documents to S3 if provided
+      if (files && files.length > 0) {
+        documentUrls = await this.s3UploadService.uploadMultipleFiles(
+          files,
+          'jobs/documents',
+        );
+      }
+
       const job = new this.jobModel({
         company: userId,
         jobTitle: createJobDto.jobTitle,
@@ -19,7 +37,8 @@ export class JobService {
         timelineStartDate: new Date(createJobDto.timelineStartDate),
         timelineEndDate: new Date(createJobDto.timelineEndDate),
         hourlyRate: createJobDto.hourlyRate,
-        projectDocuments: createJobDto.documents || [],
+        typeOfJob: 'request',
+        projectDocuments: documentUrls.length > 0 ? documentUrls : createJobDto.documents || [],
       });
 
       return await job.save();

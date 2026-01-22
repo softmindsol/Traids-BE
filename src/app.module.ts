@@ -7,7 +7,10 @@ import { CompanyModule } from './company/company.module';
 import { SubcontractorModule } from './subcontractor/subcontractor.module';
 import { AuthModule } from './auth/auth.module';
 import { JobModule } from './job/job.module';
+import { OfferModule } from './offer/offer.module';
+import { SocketModule } from './socket/socket.module';
 import { Logger } from '@nestjs/common';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -25,10 +28,13 @@ import { Logger } from '@nestjs/common';
         return connection;
       },
     }),
+    SocketModule,
     CompanyModule,
     SubcontractorModule,
     AuthModule,
     JobModule,
+    OfferModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

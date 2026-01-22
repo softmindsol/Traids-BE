@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.io Test</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+    .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+    input, button { padding: 10px; margin: 5px; }
+    input { width: 300px; }
+    button { cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+    button:hover { background: #0056b3; }
+    #logs { background: #f5f5f5; padding: 15px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    .log-entry { margin: 5px 0; padding: 5px; border-left: 3px solid #007bff; }
+    .log-entry.error { border-left-color: red; color: red; }
+    .log-entry.success { border-left-color: green; color: green; }
+    .status { padding: 5px 10px; border-radius: 4px; display: inline-block; }
+    .status.connected { background: #d4edda; color: #155724; }
+    .status.disconnected { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <h1>🔌 Socket.io Test Client</h1>
+  
+  <div class="section">
+    <h3>1. Connection</h3>
+    <input type="text" id="token" placeholder="Enter JWT Token (from login)" />
+    <br>
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+    <span id="status" class="status disconnected">Disconnected</span>
+  </div>
+
+  <div class="section">
+    <h3>2. Test Events</h3>
+    <button onclick="sendPing()">Send Ping</button>
+    <button onclick="joinRoom()">Join Test Room</button>
+    <button onclick="leaveRoom()">Leave Test Room</button>
+  </div>
+
+  <div class="section">
+    <h3>3. Logs</h3>
+    <button onclick="clearLogs()">Clear Logs</button>
+    <div id="logs"></div>
+  </div>
+
+  <script>
+    let socket = null;
+    const SERVER_URL = 'http://localhost:3000';
+
+    function log(message, type = 'info') {
+      const logs = document.getElementById('logs');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logs.appendChild(entry);
+      logs.scrollTop = logs.scrollHeight;
+    }
+
+    function updateStatus(connected) {
+      const status = document.getElementById('status');
+      status.textContent = connected ? 'Connected' : 'Disconnected';
+      status.className = `status ${connected ? 'connected' : 'disconnected'}`;
+    }
+
+    function connect() {
+      const token = document.getElementById('token').value;
+      
+      if (!token) {
+        log('Please enter a JWT token first!', 'error');
+        return;
+      }
+
+      log(`Connecting to ${SERVER_URL}...`);
+
+      socket = io(SERVER_URL, {
+        auth: { token },
+        transports: ['websocket', 'polling']
+      });
+
+      // Connection events
+      socket.on('connect', () => {
+        log('Socket connected! ID: ' + socket.id, 'success');
+        updateStatus(true);
+      });
+
+      socket.on('connected', (data) => {
+        log('Auth successful: ' + JSON.stringify(data), 'success');
+      });
+
+      socket.on('disconnect', (reason) => {
+        log('Disconnected: ' + reason, 'error');
+        updateStatus(false);
+      });
+
+      socket.on('connect_error', (error) => {
+        log('Connection error: ' + error.message, 'error');
+        updateStatus(false);
+      });
+
+      socket.on('error', (error) => {
+        log('Error: ' + JSON.stringify(error), 'error');
+      });
+
+      // Listen for offer notifications
+      socket.on('offer:received', (data) => {
+        log('🎉 NEW OFFER RECEIVED: ' + JSON.stringify(data), 'success');
+        alert('New Offer: ' + data.message);
+      });
+
+      socket.on('offer:accepted', (data) => {
+        log('✅ OFFER ACCEPTED: ' + JSON.stringify(data), 'success');
+      });
+
+      socket.on('offer:rejected', (data) => {
+        log('❌ OFFER REJECTED: ' + JSON.stringify(data), 'error');
+      });
+
+      socket.on('job:assigned', (data) => {
+        log('📋 JOB ASSIGNED: ' + JSON.stringify(data), 'success');
+      });
+
+      socket.on('message:received', (data) => {
+        log('💬 MESSAGE: ' + JSON.stringify(data), 'success');
+      });
+
+      socket.on('notification', (data) => {
+        log('🔔 NOTIFICATION: ' + JSON.stringify(data), 'success');
+      });
+
+      // Pong response
+      socket.on('pong', (data) => {
+        log('Pong received: ' + JSON.stringify(data), 'success');
+      });
+    }
+
+    function disconnect() {
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+        log('Manually disconnected');
+        updateStatus(false);
+      }
+    }
+
+    function sendPing() {
+      if (!socket || !socket.connected) {
+        log('Not connected!', 'error');
+        return;
+      }
+      log('Sending ping...');
+      socket.emit('ping', {}, (response) => {
+        log('Ping response: ' + JSON.stringify(response), 'success');
+      });
+    }
+
+    function joinRoom() {
+      if (!socket || !socket.connected) {
+        log('Not connected!', 'error');
+        return;
+      }
+      socket.emit('joinRoom', { room: 'test-room' }, (response) => {
+        log('Join room response: ' + JSON.stringify(response), 'success');
+      });
+    }
+
+    function leaveRoom() {
+      if (!socket || !socket.connected) {
+        log('Not connected!', 'error');
+        return;
+      }
+      socket.emit('leaveRoom', { room: 'test-room' }, (response) => {
+        log('Leave room response: ' + JSON.stringify(response), 'success');
+      });
+    }
+
+    function clearLogs() {
+      document.getElementById('logs').innerHTML = '';
+    }
+
+    log('Ready. Enter your JWT token and click Connect.');
+    log('Then send an offer from company to test notifications.');
+  </script>
+</body>
+</html>

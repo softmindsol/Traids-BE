@@ -10,6 +10,11 @@ export enum Trade {
   MASONRY = 'masonry',
 }
 
+export enum typeOfJob {
+  offer = 'offer',
+  request = 'request',
+}
+
 @Schema({ timestamps: true })
 export class Job {
   @Prop({ type: Types.ObjectId, ref: 'Company', required: true })
@@ -17,6 +22,9 @@ export class Job {
 
   @Prop({ type: Types.ObjectId, ref: 'Subcontractor', required: false })
   assignedTo?: Types.ObjectId;
+
+  @Prop({ required: true, enum: typeOfJob })
+  typeOfJob: typeOfJob;
 
   @Prop({ required: true })
   jobTitle: string;

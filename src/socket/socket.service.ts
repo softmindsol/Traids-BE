@@ -18,7 +18,7 @@ export enum NotificationType {
 
   // Chat notifications
   MESSAGE_RECEIVED = 'message:received',
-  
+
   // General notifications
   NOTIFICATION = 'notification',
 }
@@ -35,13 +35,12 @@ export interface NotificationPayload {
 export class SocketService {
   private readonly logger = new Logger(SocketService.name);
 
-  constructor(private socketGateway: SocketGateway) {}
+  constructor(private socketGateway: SocketGateway) { }
 
   /**
    * Send notification to a specific user
    */
   sendToUser(userId: string, notification: NotificationPayload): void {
-    console.log('Sending notification to user:', userId, notification);
     const payload = {
       ...notification,
       timestamp: notification.timestamp || new Date(),
@@ -109,105 +108,5 @@ export class SocketService {
    */
   getOnlineUsers(): string[] {
     return this.socketGateway.getOnlineUsers();
-  }
-
-  // ============================================
-  // Convenience methods for common notifications
-  // ============================================
-
-  /**
-   * Notify subcontractor about new offer
-   */
-  notifyOfferReceived(
-    subcontractorId: string,
-    offerData: {
-      offerId: string;
-      jobTitle: string;
-      companyName: string;
-      hourlyRate: number;
-    },
-  ): void {
-    this.sendToUser(subcontractorId, {
-      type: NotificationType.OFFER_RECEIVED,
-      title: 'New Job Offer',
-      message: `You received a new offer for "${offerData.jobTitle}" from ${offerData.companyName}`,
-      data: offerData,
-    });
-  }
-
-  /**
-   * Notify company that offer was accepted
-   */
-  notifyOfferAccepted(
-    companyId: string,
-    offerData: {
-      offerId: string;
-      jobTitle: string;
-      subcontractorName: string;
-    },
-  ): void {
-    this.sendToUser(companyId, {
-      type: NotificationType.OFFER_ACCEPTED,
-      title: 'Offer Accepted',
-      message: `${offerData.subcontractorName} accepted your offer for "${offerData.jobTitle}"`,
-      data: offerData,
-    });
-  }
-
-  /**
-   * Notify company that offer was rejected
-   */
-  notifyOfferRejected(
-    companyId: string,
-    offerData: {
-      offerId: string;
-      jobTitle: string;
-      subcontractorName: string;
-    },
-  ): void {
-    this.sendToUser(companyId, {
-      type: NotificationType.OFFER_REJECTED,
-      title: 'Offer Rejected',
-      message: `${offerData.subcontractorName} rejected your offer for "${offerData.jobTitle}"`,
-      data: offerData,
-    });
-  }
-
-  /**
-   * Notify about job assignment
-   */
-  notifyJobAssigned(
-    userId: string,
-    jobData: {
-      jobId: string;
-      jobTitle: string;
-    },
-  ): void {
-    this.sendToUser(userId, {
-      type: NotificationType.JOB_ASSIGNED,
-      title: 'Job Assigned',
-      message: `You have been assigned to "${jobData.jobTitle}"`,
-      data: jobData,
-    });
-  }
-
-  /**
-   * Notify about new message
-   */
-  notifyMessageReceived(
-    userId: string,
-    messageData: {
-      senderId: string;
-      senderName: string;
-      preview: string;
-      conversationId?: string;
-    },
-  ): void {
-    this.sendToUser(userId, {
-      type: NotificationType.MESSAGE_RECEIVED,
-      title: 'New Message',
-      message: `${messageData.senderName}: ${messageData.preview}`,
-      data: messageData,
-    });
   }
 }

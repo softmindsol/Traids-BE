@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Job, JobDocument } from './schema/job.schema';
 import { CreateJobDto } from './dto/create-job.dto';
 import { S3UploadService } from '../common/service/s3-upload.service';
@@ -10,13 +10,13 @@ export class JobService {
   constructor(
     @InjectModel(Job.name) private jobModel: Model<JobDocument>,
     private s3UploadService: S3UploadService,
-  ) {}
+  ) { }
 
   async createJob(
     createJobDto: CreateJobDto,
     userId: string,
     files?: Express.Multer.File[],
-  ): Promise<Job> {
+  ): Promise<JobDocument> {
     try {
       let documentUrls: string[] = [];
 
@@ -29,7 +29,7 @@ export class JobService {
       }
 
       const job = new this.jobModel({
-        company: userId,
+        company: new Types.ObjectId(userId),
         jobTitle: createJobDto.jobTitle,
         trade: createJobDto.trade,
         description: createJobDto.description,
@@ -50,7 +50,7 @@ export class JobService {
     }
   }
 
-  async getJobsByCompany(companyId: string): Promise<Job[]> {
+  async getJobsByCompany(companyId: string): Promise<JobDocument[]> {
     try {
       return await this.jobModel
         .find({ company: companyId })
@@ -71,7 +71,7 @@ export class JobService {
     maxHourlyRate?: number;
     location?: string;
     startDate?: Date;
-  }): Promise<Job[]> {
+  }): Promise<JobDocument[]> {
     try {
       const query: any = {};
 
@@ -111,6 +111,27 @@ export class JobService {
     } catch (error) {
       throw new HttpException(
         'Failed to fetch jobs',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  async getJobById(jobId: string): Promise<JobDocument> {
+    try {
+      const job = await this.jobModel.findById(jobId)
+        .populate('company', 'companyName workEmail phoneNumber headOfficeAddress')
+        .populate('assignedTo', 'fullName email primaryTrade profileImage')
+        .exec();
+
+      if (!job) {
+        throw new HttpException('Job not found', HttpStatus.NOT_FOUND);
+      }
+      return job;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to fetch job',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

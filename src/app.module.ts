@@ -11,6 +11,7 @@ import { OfferModule } from './offer/offer.module';
 import { SocketModule } from './socket/socket.module';
 import { Logger } from '@nestjs/common';
 import { ChatModule } from './chat/chat.module';
+import { JobApplicationModule } from './job-application/job-application.module';
 
 @Module({
   imports: [
@@ -35,8 +36,9 @@ import { ChatModule } from './chat/chat.module';
     JobModule,
     OfferModule,
     ChatModule,
+    JobApplicationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

@@ -13,7 +13,7 @@ export class ChatController {
   constructor(
     private readonly chatService: ChatService,
     private readonly s3UploadService: S3UploadService,
-  ) {}
+  ) { }
 
   @Post('send-first')
   @UseInterceptors(FileFieldsInterceptor([
@@ -36,7 +36,6 @@ export class ChatController {
     const userId = req.user.sub;
     const userType = req.user.userType;
     // Send message
-    console.log(userId, userType, " USER ID AND TYPE ");
     const message = await this.chatService.sendMessage(
       conversation._id.toString(),
       userId,

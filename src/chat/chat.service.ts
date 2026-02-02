@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { SocketService } from '../socket/socket.service';
+import { CompanySocketService } from '../socket/companySocket.service';
+import { SubcontractorSocketService } from '../socket/subcontractorSocket.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Conversation, ConversationDocument } from './schema/conversation.schema';
@@ -10,8 +11,9 @@ export class ChatService {
   constructor(
     @InjectModel(Conversation.name) private conversationModel: Model<ConversationDocument>,
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
-    private socketService: SocketService,
-  ) {}
+    private companySocketService: CompanySocketService,
+    private subcontractorSocketService: SubcontractorSocketService,
+  ) { }
 
   async findOrCreateConversation(companyId: string, subcontractorId: string) {
     let convo = await this.conversationModel.findOne({ company: companyId, subcontractor: subcontractorId });
@@ -65,13 +67,20 @@ export class ChatService {
       recipientId = convo.company.toString();
       recipientType = 'company';
     }
-    // Optionally, fetch sender name (not implemented here)
-    this.socketService.notifyMessageReceived(recipientId, {
+
+    // Send notification using appropriate socket service
+    const messageData = {
       senderId,
       senderName: senderType,
       preview: content,
       conversationId,
-    });
+    };
+
+    if (recipientType === 'company') {
+      this.companySocketService.notifyNewMessage(recipientId, messageData);
+    } else {
+      this.subcontractorSocketService.notifyNewMessage(recipientId, messageData);
+    }
 
     return message;
   }

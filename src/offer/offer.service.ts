@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, ConsoleLogger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Offer, OfferDocument, OfferStatus } from './schema/offer.schema';
@@ -7,7 +7,7 @@ import { Subcontractor, SubcontractorDocument } from '../subcontractor/schema/su
 import { Company, CompanyDocument } from '../company/schema/company.schema';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { S3UploadService } from '../common/service/s3-upload.service';
-import { SocketService } from '../socket/socket.service';
+import { SubcontractorSocketService } from '../socket/subcontractorSocket.service';
 
 @Injectable()
 export class OfferService {
@@ -17,8 +17,8 @@ export class OfferService {
     @InjectModel(Subcontractor.name) private subcontractorModel: Model<SubcontractorDocument>,
     @InjectModel(Company.name) private companyModel: Model<CompanyDocument>,
     private s3UploadService: S3UploadService,
-    private socketService: SocketService,
-  ) {}
+    private subcontractorSocketService: SubcontractorSocketService,
+  ) { }
 
   async sendOffer(
     createOfferDto: CreateOfferDto,
@@ -63,6 +63,7 @@ export class OfferService {
 
       const savedJob = await newJob.save();
 
+
       // Step 3: Create the Offer with the new Job ID
       const offer = new this.offerModel({
         job: savedJob._id,
@@ -91,7 +92,7 @@ export class OfferService {
       const company = await this.companyModel.findById(companyId).exec();
 
       // Send real-time notification to subcontractor
-      this.socketService.notifyOfferReceived(createOfferDto.subcontractorId, {
+      this.subcontractorSocketService.notifyOfferReceived(createOfferDto.subcontractorId, {
         offerId: savedOffer._id.toString(),
         jobTitle: createOfferDto.jobTitle,
         companyName: company?.companyName || 'A company',
@@ -111,7 +112,6 @@ export class OfferService {
   }
 
   async getOffersByCompany(companyId: string): Promise<Offer[]> {
-    console.log('Fetching offers for company ID:', companyId);
     return await this.offerModel
       .find({ company: new Types.ObjectId(companyId) })
       .populate('job')

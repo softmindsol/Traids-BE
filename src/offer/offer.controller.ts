@@ -18,7 +18,7 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('offers')
 export class OfferController {
-  constructor(private readonly offerService: OfferService) {}
+  constructor(private readonly offerService: OfferService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard, AdminGuard)

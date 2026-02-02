@@ -10,6 +10,14 @@ export enum Trade {
   MASONRY = 'masonry',
 }
 
+export enum Status {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  COMPLETED = 'completed',
+  IN_PROGRESS = 'in_progress',
+}
+
 export enum typeOfJob {
   offer = 'offer',
   request = 'request',
@@ -25,6 +33,9 @@ export class Job {
 
   @Prop({ required: true, enum: typeOfJob })
   typeOfJob: typeOfJob;
+
+  @Prop({ required: true, enum: Status, default: Status.PENDING })
+  status: Status;
 
   @Prop({ required: true })
   jobTitle: string;

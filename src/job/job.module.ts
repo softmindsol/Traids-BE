@@ -5,6 +5,7 @@ import { Job, JobSchema } from './schema/job.schema';
 import { JobController } from './job.controller';
 import { JobService } from './job.service';
 import { S3UploadService } from '../common/service/s3-upload.service';
+import { JobApplicationModule } from '../job-application/job-application.module';
 
 @Module({
   imports: [
@@ -13,9 +14,10 @@ import { S3UploadService } from '../common/service/s3-upload.service';
       secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       signOptions: { expiresIn: '7d' },
     }),
+    JobApplicationModule,
   ],
   controllers: [JobController],
   providers: [JobService, S3UploadService],
   exports: [JobService],
 })
-export class JobModule {}
+export class JobModule { }

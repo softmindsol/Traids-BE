@@ -22,7 +22,7 @@ export class AuthService {
     private subcontractorModel: Model<SubcontractorDocument>,
     private jwtService: JwtService,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   async login(loginDto: LoginDto): Promise<{
     user: any;

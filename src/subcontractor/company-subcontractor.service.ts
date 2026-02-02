@@ -15,14 +15,13 @@ export class CompanySubcontractorService {
     private subcontractorModel: Model<SubcontractorDocument>,
     @InjectModel(Job.name)
     private jobModel: Model<JobDocument>,
-  ) {}
+  ) { }
 
   async getAllSubcontractorsWithFilters(
     filters: FilterSubcontractorsDto,
   ): Promise<Subcontractor[]> {
     try {
       const query: any = {};
-
       // Filter by primary trade
       if (filters.primaryTrade) {
         query.primaryTrade = filters.primaryTrade;

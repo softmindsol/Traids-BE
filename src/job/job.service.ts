@@ -52,8 +52,9 @@ export class JobService {
 
   async getJobsByCompany(companyId: string): Promise<JobDocument[]> {
     try {
+      console.log(companyId);
       return await this.jobModel
-        .find({ company: companyId })
+        .find({ company: new Types.ObjectId(companyId) })
         .populate('company', 'companyName workEmail')
         .populate('assignedTo', 'firstName lastName email')
         .sort({ createdAt: -1 })

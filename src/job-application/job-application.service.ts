@@ -129,6 +129,12 @@ export class JobApplicationService {
         }
     }
 
+    async getAcceptedApplication(jobId: string): Promise<JobApplication | null> {
+        return this.applicationModel.findOne({ job: jobId, status: ApplicationStatus.ACCEPTED })
+            .populate('subcontractor', 'fullName email primaryTrade profileImage')
+            .exec();
+    }
+
     async acceptApplication(
         applicationId: string,
         companyId: string,

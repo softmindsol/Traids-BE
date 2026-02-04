@@ -8,7 +8,7 @@ import {
   Subcontractor,
   SubcontractorSchema,
 } from '../subcontractor/schema/subcontractor.schema';
-import { EmailService } from '../common/service/email.service';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
@@ -20,9 +20,10 @@ import { EmailService } from '../common/service/email.service';
       secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       signOptions: { expiresIn: '7d' },
     }),
+    CommonModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, EmailService],
+  providers: [AuthService],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

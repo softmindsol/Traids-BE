@@ -28,9 +28,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       const payload = this.jwtService.verify(token, {
         secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       });
-      console.log(payload, "payload");
       request.user = payload;
-      console.log(payload, "payload");
       return true;
     } catch (error) {
       throw new UnauthorizedException('Invalid token');

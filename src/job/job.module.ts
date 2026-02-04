@@ -4,8 +4,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { Job, JobSchema } from './schema/job.schema';
 import { JobController } from './job.controller';
 import { JobService } from './job.service';
-import { S3UploadService } from '../common/service/s3-upload.service';
 import { JobApplicationModule } from '../job-application/job-application.module';
+import { OfferModule } from '../offer/offer.module';
+import { ComplianceModule } from '../compliance/compliance.module';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
@@ -15,9 +17,12 @@ import { JobApplicationModule } from '../job-application/job-application.module'
       signOptions: { expiresIn: '7d' },
     }),
     JobApplicationModule,
+    OfferModule,
+    ComplianceModule,
+    CommonModule,
   ],
   controllers: [JobController],
-  providers: [JobService, S3UploadService],
+  providers: [JobService],
   exports: [JobService],
 })
 export class JobModule { }

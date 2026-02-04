@@ -7,7 +7,7 @@ import { Subcontractor, SubcontractorSchema } from '../subcontractor/schema/subc
 import { Company, CompanySchema } from '../company/schema/company.schema';
 import { OfferController } from './offer.controller';
 import { OfferService } from './offer.service';
-import { S3UploadService } from '../common/service/s3-upload.service';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
@@ -21,9 +21,10 @@ import { S3UploadService } from '../common/service/s3-upload.service';
       secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       signOptions: { expiresIn: '7d' },
     }),
+    CommonModule,
   ],
   controllers: [OfferController],
-  providers: [OfferService, S3UploadService],
+  providers: [OfferService],
   exports: [OfferService],
 })
-export class OfferModule {}
+export class OfferModule { }

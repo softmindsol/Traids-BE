@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { Company, CompanySchema } from './schema/company.schema';
 import { CompanyService } from './company.service';
 import { CompanyController } from './company.controller';
-import { S3UploadService } from '../common/service/s3-upload.service';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
@@ -13,9 +13,10 @@ import { S3UploadService } from '../common/service/s3-upload.service';
       secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       signOptions: { expiresIn: '7d' },
     }),
+    CommonModule,
   ],
   controllers: [CompanyController],
-  providers: [CompanyService, S3UploadService],
+  providers: [CompanyService],
   exports: [CompanyService],
 })
-export class CompanyModule {}
+export class CompanyModule { }

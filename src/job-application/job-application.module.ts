@@ -5,9 +5,9 @@ import { JobApplicationService } from './job-application.service';
 import { JobApplication, JobApplicationSchema } from './schema/job-application.schema';
 import { Job, JobSchema } from '../job/schema/job.schema';
 import { Subcontractor, SubcontractorSchema } from '../subcontractor/schema/subcontractor.schema';
-import { S3UploadService } from '../common/service/s3-upload.service';
 import { SocketModule } from '../socket/socket.module';
 import { JwtModule } from '@nestjs/jwt';
+import { CommonModule } from '../common/common.module';
 
 @Module({
     imports: [
@@ -21,9 +21,10 @@ import { JwtModule } from '@nestjs/jwt';
             secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
             signOptions: { expiresIn: '7d' },
         }),
+        CommonModule,
     ],
     controllers: [JobApplicationController],
-    providers: [JobApplicationService, S3UploadService],
+    providers: [JobApplicationService],
     exports: [JobApplicationService],
 })
 export class JobApplicationModule { }

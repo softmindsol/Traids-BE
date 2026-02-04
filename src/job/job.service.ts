@@ -4,12 +4,14 @@ import { Model, Types } from 'mongoose';
 import { Job, JobDocument } from './schema/job.schema';
 import { CreateJobDto } from './dto/create-job.dto';
 import { S3UploadService } from '../common/service/s3-upload.service';
+import { ComplianceService } from '../compliance/compliance.service';
 
 @Injectable()
 export class JobService {
   constructor(
     @InjectModel(Job.name) private jobModel: Model<JobDocument>,
     private s3UploadService: S3UploadService,
+    private complianceService: ComplianceService,
   ) { }
 
   async createJob(
@@ -41,7 +43,15 @@ export class JobService {
         projectDocuments: documentUrls.length > 0 ? documentUrls : createJobDto.documents || [],
       });
 
-      return await job.save();
+      const savedJob = await job.save();
+
+      // Automatically create a compliance record for this job
+      await this.complianceService.createCompliance(
+        createJobDto.jobTitle,
+        savedJob._id.toString(),
+      );
+
+      return savedJob;
     } catch (error) {
       throw new HttpException(
         'Failed to create job',

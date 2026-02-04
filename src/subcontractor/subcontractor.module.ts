@@ -7,7 +7,7 @@ import { SubcontractorService } from './subcontractor.service';
 import { SubcontractorController } from './subcontractor.controller';
 import { CompanySubcontractorService } from './company-subcontractor.service';
 import { CompanySubcontractorController } from './company-subcontractor.controller';
-import { S3UploadService } from '../common/service/s3-upload.service';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
@@ -19,9 +19,10 @@ import { S3UploadService } from '../common/service/s3-upload.service';
       secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       signOptions: { expiresIn: '7d' },
     }),
+    CommonModule,
   ],
   controllers: [SubcontractorController, CompanySubcontractorController],
-  providers: [SubcontractorService, CompanySubcontractorService, S3UploadService],
+  providers: [SubcontractorService, CompanySubcontractorService],
   exports: [SubcontractorService, CompanySubcontractorService],
 })
-export class SubcontractorModule {}
+export class SubcontractorModule { }

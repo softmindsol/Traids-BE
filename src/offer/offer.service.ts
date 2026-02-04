@@ -128,4 +128,19 @@ export class OfferService {
       .sort({ createdAt: -1 })
       .exec();
   }
+
+  async getOffersForJob(jobId: string): Promise<Offer[]> {
+    return await this.offerModel
+      .find({ job: new Types.ObjectId(jobId) })
+      .populate('subcontractor', 'fullName email primaryTrade hourlyRate profileImage')
+      .sort({ sentAt: -1 })
+      .exec();
+  }
+
+  async getAcceptedOffer(jobId: string): Promise<Offer | null> {
+    return await this.offerModel
+      .findOne({ job: new Types.ObjectId(jobId), status: OfferStatus.ACCEPTED })
+      .populate('subcontractor', 'fullName email primaryTrade hourlyRate profileImage')
+      .exec();
+  }
 }

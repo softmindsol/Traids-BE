@@ -4,6 +4,7 @@ import { SocketGateway } from './socket.gateway';
 import { SocketService } from './socket.service';
 import { CompanySocketService } from './companySocket.service';
 import { SubcontractorSocketService } from './subcontractorSocket.service';
+import { NotificationModule } from '../notification/notification.module';
 
 @Global() // Makes this module available globally without importing
 @Module({
@@ -12,6 +13,7 @@ import { SubcontractorSocketService } from './subcontractorSocket.service';
       secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       signOptions: { expiresIn: '7d' },
     }),
+    NotificationModule,
   ],
   providers: [SocketGateway, SocketService, CompanySocketService, SubcontractorSocketService],
   exports: [SocketService, SocketGateway, CompanySocketService, SubcontractorSocketService],

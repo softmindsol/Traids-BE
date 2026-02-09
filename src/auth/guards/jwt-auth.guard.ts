@@ -18,8 +18,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     const token = authHeader.split(' ')[1];
 
-    console.log(token, "token");
-
     if (!token) {
       throw new UnauthorizedException('No token found');
     }

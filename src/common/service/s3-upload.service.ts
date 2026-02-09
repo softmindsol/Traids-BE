@@ -1,6 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -34,19 +33,13 @@ export class S3UploadService {
         Key: fileName,
         Body: file.buffer,
         ContentType: file.mimetype,
+        ACL: 'public-read', // Make file publicly accessible
       });
 
       await this.s3Client.send(putCommand);
 
-      // Generate a presigned URL for public access (valid for 7 days)
-      const getCommand = new GetObjectCommand({
-        Bucket: this.bucketName,
-        Key: fileName,
-      });
-
-      const publicUrl = await getSignedUrl(this.s3Client, getCommand, {
-        expiresIn: 604800, // 7 days in seconds
-      });
+      // Return permanent public URL
+      const publicUrl = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${fileName}`;
 
       return publicUrl;
     } catch (error) {

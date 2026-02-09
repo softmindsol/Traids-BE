@@ -340,4 +340,32 @@ export class AuthService {
 
     throw new HttpException('Invalid user type', HttpStatus.BAD_REQUEST);
   }
+
+  async getProfile(userId: string, userType: 'company' | 'subcontractor'): Promise<any> {
+    if (userType === 'company') {
+      const company = await this.companyModel
+        .findById(userId)
+        .select('-password')
+        .exec();
+
+      if (!company) {
+        throw new HttpException('Company not found', HttpStatus.NOT_FOUND);
+      }
+
+      return company;
+    } else if (userType === 'subcontractor') {
+      const subcontractor = await this.subcontractorModel
+        .findById(userId)
+        .select('-password')
+        .exec();
+
+      if (!subcontractor) {
+        throw new HttpException('Subcontractor not found', HttpStatus.NOT_FOUND);
+      }
+
+      return subcontractor;
+    }
+
+    throw new HttpException('Invalid user type', HttpStatus.BAD_REQUEST);
+  }
 }

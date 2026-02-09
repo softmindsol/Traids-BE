@@ -96,6 +96,7 @@ export class OfferService {
         offerId: savedOffer._id.toString(),
         jobTitle: createOfferDto.jobTitle,
         companyName: company?.companyName || 'A company',
+        companyId: companyId,
         hourlyRate: createOfferDto.hourlyRate,
       });
 

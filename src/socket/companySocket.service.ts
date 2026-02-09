@@ -1,24 +1,30 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SocketGateway } from './socket.gateway';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class CompanySocketService {
     private readonly logger = new Logger(CompanySocketService.name);
 
-    constructor(private socketGateway: SocketGateway) { }
+    constructor(
+        private socketGateway: SocketGateway,
+        private notificationService: NotificationService,
+    ) { }
 
     /**
      * Notify company about new job application
      */
-    notifyNewJobApplication(
+    async notifyNewJobApplication(
         companyId: string,
         applicationData: {
             applicationId: string;
             jobId: string;
             subcontractorName: string;
+            subcontractorId: string;
             appliedAt: Date;
         },
-    ): void {
+    ): Promise<void> {
+        // Emit socket event
         this.socketGateway.getServer()
             .to(`user:${companyId}`)
             .emit('newJobApplication', {
@@ -28,20 +34,40 @@ export class CompanySocketService {
                 appliedAt: applicationData.appliedAt,
             });
 
+        // Create notification in database
+        await this.notificationService.createNotification({
+            type: 'newJobApplication',
+            title: 'New Job Application',
+            message: `${applicationData.subcontractorName} applied for your job`,
+            senderId: applicationData.subcontractorId,
+            senderType: 'subcontractor',
+            senderName: applicationData.subcontractorName,
+            receiverId: companyId,
+            receiverType: 'company',
+            relatedEntityId: applicationData.applicationId,
+            relatedEntityType: 'application',
+            data: {
+                jobId: applicationData.jobId,
+                appliedAt: applicationData.appliedAt,
+            },
+        });
+
         this.logger.log(`New job application notification sent to company ${companyId}`);
     }
 
     /**
      * Notify company that offer was accepted
      */
-    notifyOfferAccepted(
+    async notifyOfferAccepted(
         companyId: string,
         offerData: {
             offerId: string;
             jobTitle: string;
             subcontractorName: string;
+            subcontractorId: string;
         },
-    ): void {
+    ): Promise<void> {
+        // Emit socket event
         this.socketGateway.getServer()
             .to(`user:${companyId}`)
             .emit('offerAccepted', {
@@ -50,20 +76,37 @@ export class CompanySocketService {
                 subcontractorName: offerData.subcontractorName,
             });
 
+        // Create notification in database
+        await this.notificationService.createNotification({
+            type: 'offerAccepted',
+            title: 'Offer Accepted',
+            message: `${offerData.subcontractorName} accepted your offer for ${offerData.jobTitle}`,
+            senderId: offerData.subcontractorId,
+            senderType: 'subcontractor',
+            senderName: offerData.subcontractorName,
+            receiverId: companyId,
+            receiverType: 'company',
+            relatedEntityId: offerData.offerId,
+            relatedEntityType: 'offer',
+            data: { jobTitle: offerData.jobTitle },
+        });
+
         this.logger.log(`Offer accepted notification sent to company ${companyId}`);
     }
 
     /**
      * Notify company that offer was rejected
      */
-    notifyOfferRejected(
+    async notifyOfferRejected(
         companyId: string,
         offerData: {
             offerId: string;
             jobTitle: string;
             subcontractorName: string;
+            subcontractorId: string;
         },
-    ): void {
+    ): Promise<void> {
+        // Emit socket event
         this.socketGateway.getServer()
             .to(`user:${companyId}`)
             .emit('offerRejected', {
@@ -72,21 +115,38 @@ export class CompanySocketService {
                 subcontractorName: offerData.subcontractorName,
             });
 
+        // Create notification in database
+        await this.notificationService.createNotification({
+            type: 'offerRejected',
+            title: 'Offer Rejected',
+            message: `${offerData.subcontractorName} rejected your offer for ${offerData.jobTitle}`,
+            senderId: offerData.subcontractorId,
+            senderType: 'subcontractor',
+            senderName: offerData.subcontractorName,
+            receiverId: companyId,
+            receiverType: 'company',
+            relatedEntityId: offerData.offerId,
+            relatedEntityType: 'offer',
+            data: { jobTitle: offerData.jobTitle },
+        });
+
         this.logger.log(`Offer rejected notification sent to company ${companyId}`);
     }
 
     /**
      * Notify company about new message
      */
-    notifyNewMessage(
+    async notifyNewMessage(
         companyId: string,
         messageData: {
             conversationId: string;
             senderId: string;
             senderName: string;
             preview: string;
+            messageId?: string;
         },
-    ): void {
+    ): Promise<void> {
+        // Emit socket event
         this.socketGateway.getServer()
             .to(`user:${companyId}`)
             .emit('newMessage', {
@@ -95,6 +155,21 @@ export class CompanySocketService {
                 senderName: messageData.senderName,
                 preview: messageData.preview,
             });
+
+        // Create notification in database
+        await this.notificationService.createNotification({
+            type: 'newMessage',
+            title: 'New Message',
+            message: `${messageData.senderName}: ${messageData.preview}`,
+            senderId: messageData.senderId,
+            senderType: 'subcontractor',
+            senderName: messageData.senderName,
+            receiverId: companyId,
+            receiverType: 'company',
+            relatedEntityId: messageData.messageId,
+            relatedEntityType: 'message',
+            data: { conversationId: messageData.conversationId },
+        });
 
         this.logger.log(`New message notification sent to company ${companyId}`);
     }

@@ -54,26 +54,36 @@ export class ChatService {
 
     // Emit socket notification to recipient
     // Find conversation to get both participants
-    const convo = await this.conversationModel.findById(conversationId);
+    const convo = await this.conversationModel.findById(conversationId)
+      .populate('company', 'companyName')
+      .populate('subcontractor', 'fullName')
+      .exec();
+
     if (!convo) {
       throw new Error('Conversation not found');
     }
+
     let recipientId: string;
     let recipientType: 'company' | 'subcontractor';
+    let senderName: string;
+
     if (senderType === 'company') {
-      recipientId = convo.subcontractor.toString();
+      recipientId = convo.subcontractor._id.toString();
       recipientType = 'subcontractor';
+      senderName = (convo.company as any)?.companyName || 'Company';
     } else {
-      recipientId = convo.company.toString();
+      recipientId = convo.company._id.toString();
       recipientType = 'company';
+      senderName = (convo.subcontractor as any)?.fullName || 'Subcontractor';
     }
 
     // Send notification using appropriate socket service
     const messageData = {
       senderId,
-      senderName: senderType,
-      preview: content,
+      senderName,
+      preview: content.substring(0, 100), // Limit preview length
       conversationId,
+      messageId: (message as any)._id.toString(),
     };
 
     if (recipientType === 'company') {

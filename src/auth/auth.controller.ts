@@ -1,7 +1,10 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
+  Request,
+  UseGuards,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
@@ -10,6 +13,7 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyResetTokenDto } from './dto/verify-reset-token.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -58,6 +62,21 @@ export class AuthController {
 
     return {
       message: 'Password reset successfully',
+    };
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@Request() req) {
+    const userId = req.user.sub;
+    const userType = req.user.userType;
+
+    const profile = await this.authService.getProfile(userId, userType);
+
+    return {
+      message: 'Profile retrieved successfully',
+      userType,
+      profile,
     };
   }
 }

@@ -184,12 +184,17 @@ export class JobApplicationService {
         );
 
         // 7. Notify accepted subcontractor
+        const populatedJob = await this.jobModel.findById(application.job).populate('company', 'companyName').exec();
+        const companyName = (populatedJob?.company as any)?.companyName || 'Company';
+
         this.subcontractorSocketService.notifyApplicationAccepted(
             application.subcontractor.toString(),
             {
                 applicationId: (application as any)._id,
                 jobId: application.job as any,
                 message: responseMessage,
+                companyId: companyId,
+                companyName: companyName,
             }
         );
 
@@ -223,27 +228,36 @@ export class JobApplicationService {
         await application.save();
 
         // 5. Notify subcontractor
+        const populatedJob = await this.jobModel.findById(application.job).populate('company', 'companyName').exec();
+        const companyName = (populatedJob?.company as any)?.companyName || 'Company';
+
         this.subcontractorSocketService.notifyApplicationRejected(
             application.subcontractor.toString(),
             {
                 applicationId: (application as any)._id,
                 jobId: application.job as any,
                 message: responseMessage,
+                companyId: companyId,
+                companyName: companyName,
             }
         );
 
         return application;
     }
 
-    private notifyCompanyOfNewApplication(
+    private async notifyCompanyOfNewApplication(
         companyId: string,
         application: JobApplication,
-    ): void {
+    ): Promise<void> {
+        // Fetch subcontractor details
+        const subcontractor = await this.subcontractorModel.findById(application.subcontractor).exec();
+
         // Use CompanySocketService for company notifications
         this.companySocketService.notifyNewJobApplication(companyId, {
             applicationId: (application as any)._id,
             jobId: application.job as any,
             subcontractorName: application.fullName,
+            subcontractorId: application.subcontractor.toString(),
             appliedAt: application.appliedAt,
         });
     }

@@ -13,6 +13,7 @@ import { Logger } from '@nestjs/common';
 import { ChatModule } from './chat/chat.module';
 import { JobApplicationModule } from './job-application/job-application.module';
 import { ComplianceModule } from './compliance/compliance.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ComplianceModule } from './compliance/compliance.module';
     ChatModule,
     JobApplicationModule,
     ComplianceModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

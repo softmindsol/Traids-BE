@@ -17,8 +17,4 @@ export class FilterSubcontractorsDto {
   @IsOptional()
   @IsString()
   location?: string;
-
-  @IsOptional()
-  @IsString()
-  availability?: string;
 }

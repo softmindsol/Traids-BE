@@ -13,7 +13,7 @@ export class CompanyService {
     @InjectModel(Company.name) private companyModel: Model<CompanyDocument>,
     private jwtService: JwtService,
     private s3UploadService: S3UploadService,
-  ) {}
+  ) { }
 
   async signUp(
     signUpCompanyDto: SignUpCompanyDto,
@@ -78,5 +78,81 @@ export class CompanyService {
     return this.companyModel
       .findOne({ registrationNumber: registrationNumber })
       .exec();
+  }
+
+  async updateProfile(
+    userId: string,
+    updateDto: any,
+    files?: {
+      profileImage?: Express.Multer.File[];
+      companyDocuments?: Express.Multer.File[];
+      insuranceCertificate?: Express.Multer.File[];
+      healthAndSafetyPolicy?: Express.Multer.File[];
+    },
+  ): Promise<Company> {
+    const company = await this.companyModel.findById(userId);
+    if (!company) {
+      throw new Error('Company not found');
+    }
+
+    const updateData: any = {};
+
+    if (updateDto.companyName !== undefined) updateData.companyName = updateDto.companyName;
+    if (updateDto.registrationNumber !== undefined) updateData.registrationNumber = updateDto.registrationNumber;
+    if (updateDto.vatNumber !== undefined) updateData.vatNumber = updateDto.vatNumber;
+    if (updateDto.industryType !== undefined) updateData.industryType = updateDto.industryType;
+    if (updateDto.aboutUs !== undefined) updateData.aboutUs = updateDto.aboutUs;
+    if (updateDto.primaryContactName !== undefined) updateData.primaryContactName = updateDto.primaryContactName;
+    if (updateDto.workEmail !== undefined) updateData.workEmail = updateDto.workEmail;
+    if (updateDto.phoneNumber !== undefined) updateData.phoneNumber = updateDto.phoneNumber;
+    if (updateDto.headOfficeAddress !== undefined) updateData.headOfficeAddress = updateDto.headOfficeAddress;
+    if (updateDto.timesheetReminders !== undefined) updateData.timesheetReminders = updateDto.timesheetReminders;
+
+    // Handle password change
+    if (updateDto.password) {
+      updateData.password = await bcrypt.hash(updateDto.password, 10);
+    }
+
+    // Handle file uploads
+    if (files) {
+      if (files.profileImage?.length) {
+        updateData.profileImage = await this.s3UploadService.uploadFile(
+          files.profileImage[0],
+          'companies/profile-images',
+        );
+      }
+
+      if (files.companyDocuments?.length) {
+        updateData.companyDocuments = await this.s3UploadService.uploadMultipleFiles(
+          files.companyDocuments,
+          'companies/documents',
+        );
+      }
+
+      if (files.insuranceCertificate?.length) {
+        updateData.insuranceCertificate = await this.s3UploadService.uploadFile(
+          files.insuranceCertificate[0],
+          'companies/insurance',
+        );
+      }
+
+      if (files.healthAndSafetyPolicy?.length) {
+        updateData.healthAndSafetyPolicy = await this.s3UploadService.uploadFile(
+          files.healthAndSafetyPolicy[0],
+          'companies/health-safety',
+        );
+      }
+    }
+
+    const updated = await this.companyModel
+      .findByIdAndUpdate(userId, { $set: updateData }, { new: true })
+      .select('-password -resetToken -resetTokenExpires')
+      .exec();
+
+    if (!updated) {
+      throw new Error('Failed to update profile');
+    }
+
+    return updated;
   }
 }

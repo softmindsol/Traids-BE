@@ -45,11 +45,6 @@ export class CompanySubcontractorService {
         ];
       }
 
-      // Filter by availability
-      if (filters.availability) {
-        query.availability = { $regex: filters.availability, $options: 'i' };
-      }
-
       return await this.subcontractorModel
         .find(query)
         .select('-password -resetToken -resetTokenExpires')

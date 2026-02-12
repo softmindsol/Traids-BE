@@ -33,7 +33,6 @@ export class S3UploadService {
         Key: fileName,
         Body: file.buffer,
         ContentType: file.mimetype,
-        ACL: 'public-read', // Make file publicly accessible
       });
 
       await this.s3Client.send(putCommand);
@@ -43,6 +42,7 @@ export class S3UploadService {
 
       return publicUrl;
     } catch (error) {
+      console.error('S3 Upload Error:', error.message || error);
       throw new HttpException(
         'Failed to upload file to S3',
         HttpStatus.INTERNAL_SERVER_ERROR,

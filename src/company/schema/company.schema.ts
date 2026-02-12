@@ -48,6 +48,15 @@ export class Company {
   healthAndSafetyPolicy: string;
 
   @Prop()
+  aboutUs: string;
+
+  @Prop()
+  profileImage: string;
+
+  @Prop({ default: true })
+  timesheetReminders: boolean;
+
+  @Prop()
   resetToken?: string;
 
   @Prop()

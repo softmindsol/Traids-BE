@@ -42,8 +42,8 @@ export class Subcontractor {
   @Prop({ required: true })
   hourlyRate: number;
 
-  @Prop()
-  availability: string;
+  @Prop({ default: true })
+  availability: boolean;
 
   @Prop({ required: true })
   password: string;
@@ -58,10 +58,19 @@ export class Subcontractor {
   workExamples: string[];
 
   @Prop()
+  phoneNumber: string;
+
+  @Prop({ default: true })
+  jobAlerts: boolean;
+
+  @Prop({ default: true })
+  timesheetReminders: boolean;
+
+  @Prop()
   resetToken?: string;
 
   @Prop()
-  resetTokenExpires? : Date;
+  resetTokenExpires?: Date;
 }
 
 export const SubcontractorSchema = SchemaFactory.createForClass(Subcontractor);

@@ -33,9 +33,9 @@ export class JobApplicationService {
             throw new NotFoundException('Job not found');
         }
 
-        // 2. Validate job is still available
-        if (job.assignedTo) {
-            throw new BadRequestException('This job has already been assigned');
+        // 2. Validate job is still available (check if job has reached worker capacity)
+        if (job.assignedTo && job.assignedTo.length >= job.workersRequired) {
+            throw new BadRequestException('This job has already been fully assigned');
         }
 
         if (job.status !== 'pending') {
@@ -167,8 +167,11 @@ export class JobApplicationService {
             throw new NotFoundException('Job not found');
         }
 
-        job.assignedTo = application.subcontractor;
-        job.status = 'accepted' as any;
+        // Add subcontractor to assignedTo array if not already present
+        if (!job.assignedTo.includes(application.subcontractor)) {
+            job.assignedTo.push(application.subcontractor);
+        }
+        job.status = 'pending' as any;
         await job.save();
 
         // 6. Auto-reject all other pending applications for this job

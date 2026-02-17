@@ -8,6 +8,7 @@ import { Company, CompanyDocument } from '../company/schema/company.schema';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { S3UploadService } from '../common/service/s3-upload.service';
 import { SubcontractorSocketService } from '../socket/subcontractorSocket.service';
+import { ComplianceService } from '../compliance/compliance.service';
 
 @Injectable()
 export class OfferService {
@@ -18,6 +19,7 @@ export class OfferService {
     @InjectModel(Company.name) private companyModel: Model<CompanyDocument>,
     private s3UploadService: S3UploadService,
     private subcontractorSocketService: SubcontractorSocketService,
+    private complianceService: ComplianceService,
   ) { }
 
   async sendOffer(
@@ -63,6 +65,11 @@ export class OfferService {
 
       const savedJob = await newJob.save();
 
+      // Step 2: Create compliance record for the job
+      await this.complianceService.createCompliance(
+        createOfferDto.jobTitle,
+        savedJob._id.toString(),
+      );
 
       // Step 3: Create the Offer with the new Job ID
       const offer = new this.offerModel({

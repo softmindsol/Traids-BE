@@ -8,6 +8,7 @@ import { Company, CompanySchema } from '../company/schema/company.schema';
 import { OfferController } from './offer.controller';
 import { OfferService } from './offer.service';
 import { CommonModule } from '../common/common.module';
+import { ComplianceModule } from '../compliance/compliance.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CommonModule } from '../common/common.module';
       signOptions: { expiresIn: '7d' },
     }),
     CommonModule,
+    ComplianceModule,
   ],
   controllers: [OfferController],
   providers: [OfferService],

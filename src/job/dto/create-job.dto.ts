@@ -33,4 +33,8 @@ export class CreateJobDto {
   @IsArray()
   @IsOptional()
   documents?: string[];
+
+  @IsNumber()
+  @IsNotEmpty()
+  workersRequired: number;
 }

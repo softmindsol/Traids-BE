@@ -70,14 +70,18 @@ export class JobController {
       maxHourlyRate: filterJobsDto.maxHourlyRate,
       location: filterJobsDto.location,
       startDate: filterJobsDto.startDate ? new Date(filterJobsDto.startDate) : undefined,
+      page: filterJobsDto.page,
     };
 
-    const jobs = await this.jobService.getAllJobsWithFilters(filters);
+    const result = await this.jobService.getAllJobsWithFilters(filters);
 
     return {
       message: 'Available jobs retrieved successfully',
-      count: jobs.length,
-      data: jobs,
+      count: result.jobs.length,
+      total: result.total,
+      page: result.page,
+      totalPages: result.totalPages,
+      data: result.jobs,
     };
   }
 
@@ -107,7 +111,7 @@ export class JobController {
         }
 
         // If job is accepted/in_progress/completed, show the accepted offer
-        if (job.assignedTo) {
+        if (job.assignedTo && job.assignedTo.length > 0) {
           acceptedOffer = await this.offerService.getAcceptedOffer(id);
           return {
             message: 'Job retrieved successfully',
@@ -133,7 +137,7 @@ export class JobController {
     let assignedApplication: JobApplication | null = null;
 
     // If job is not pending and has assignedTo, fetch the accepted application
-    if (job.assignedTo) {
+    if (job.assignedTo && job.assignedTo.length > 0) {
       assignedApplication = await this.jobApplicationService.getAcceptedApplication(id);
     }
 
@@ -163,6 +167,23 @@ export class JobController {
 
     return {
       message: 'Job retrieved successfully',
+      data: job,
+    };
+  }
+
+  /**
+   * Start a job manually (change status to IN_PROGRESS)
+   * POST /jobs/:id/start
+   */
+  @Post(':id/start')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @HttpCode(HttpStatus.OK)
+  async startJob(@Param('id') jobId: string, @Request() req) {
+    const job = await this.jobService.startJob(jobId, req.user.sub);
+
+    return {
+      success: true,
+      message: 'Job started successfully',
       data: job,
     };
   }

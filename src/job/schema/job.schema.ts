@@ -28,8 +28,8 @@ export class Job {
   @Prop({ type: Types.ObjectId, ref: 'Company', required: true })
   company: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Subcontractor', required: false })
-  assignedTo?: Types.ObjectId;
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Subcontractor' }], default: [] })
+  assignedTo: Types.ObjectId[];
 
   @Prop({ required: true, enum: typeOfJob })
   typeOfJob: typeOfJob;
@@ -60,6 +60,9 @@ export class Job {
 
   @Prop({ type: [String], default: [] })
   projectDocuments: string[];
+
+  @Prop({ required: false, default: 1 })
+  workersRequired: number;
 }
 
 export const JobSchema = SchemaFactory.createForClass(Job);

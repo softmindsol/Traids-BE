@@ -14,6 +14,7 @@ import { ChatModule } from './chat/chat.module';
 import { JobApplicationModule } from './job-application/job-application.module';
 import { ComplianceModule } from './compliance/compliance.module';
 import { NotificationModule } from './notification/notification.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { NotificationModule } from './notification/notification.module';
     JobApplicationModule,
     ComplianceModule,
     NotificationModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

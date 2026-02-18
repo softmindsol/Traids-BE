@@ -10,8 +10,8 @@ export class SendFirstMessageDto {
   subcontractorId: string;
 
   @IsString()
-  @IsNotEmpty()
-  content: string;
+  @IsOptional()
+  content?: string;
 
   @IsArray()
   @IsOptional()

@@ -12,11 +12,14 @@ export class Message {
   @Prop({ required: true, enum: ['company', 'subcontractor'] })
   senderType: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: '' })
   content: string;
 
   @Prop([String])
   attachments: string[];
+
+  @Prop({ type: Types.ObjectId, ref: 'Job', required: false })
+  job?: Types.ObjectId;
 
   @Prop()
   readAt: Date;

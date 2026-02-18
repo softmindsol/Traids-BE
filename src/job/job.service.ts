@@ -127,7 +127,10 @@ export class JobService {
         query.timelineStartDate = { $gte: filters.startDate };
       }
 
+      console.log('Job query:', JSON.stringify(query));
+
       const total = await this.jobModel.countDocuments(query);
+      console.log('Total jobs found:', total);
 
       const jobs = await this.jobModel
         .find(query)

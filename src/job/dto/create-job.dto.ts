@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsEnum, IsNumber, IsDateString, IsOptional, IsArray } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { Trade } from '../schema/job.schema';
 
 export class CreateJobDto {
@@ -26,6 +27,7 @@ export class CreateJobDto {
   @IsNotEmpty()
   timelineEndDate: string;
 
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   @IsNotEmpty()
   hourlyRate: number;
@@ -34,6 +36,7 @@ export class CreateJobDto {
   @IsOptional()
   documents?: string[];
 
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   @IsNotEmpty()
   workersRequired: number;

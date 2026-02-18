@@ -6,8 +6,8 @@ export class SendMessageDto {
   conversationId: string;
 
   @IsString()
-  @IsNotEmpty()
-  content: string;
+  @IsOptional()
+  content?: string;
 
   @IsArray()
   @IsOptional()

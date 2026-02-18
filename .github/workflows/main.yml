@@ -1,4 +1,4 @@
-name: Traids Backend CI/CD
+name: Traids Backend CI/CD VPS
 
 on:
   push:

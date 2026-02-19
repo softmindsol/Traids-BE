@@ -11,10 +11,13 @@ import {
   UseInterceptors,
   UploadedFiles,
   Param,
+  Delete,
+  Patch,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { JobService } from './job.service';
 import { CreateJobDto } from './dto/create-job.dto';
+import { UpdateJobDto } from './dto/update-job.dto';
 import { FilterJobsDto } from './dto/filter-jobs.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
@@ -185,6 +188,50 @@ export class JobController {
       success: true,
       message: 'Job started successfully',
       data: job,
+    };
+  }
+
+  /**
+   * Update a job
+   * PATCH /jobs/:id
+   */
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FilesInterceptor('documents', 10))
+  async updateJob(
+    @Param('id') jobId: string,
+    @Body() updateJobDto: UpdateJobDto,
+    @Request() req,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    const job = await this.jobService.updateJob(
+      jobId,
+      updateJobDto,
+      req.user.sub,
+      files,
+    );
+
+    return {
+      success: true,
+      message: 'Job updated successfully',
+      data: job,
+    };
+  }
+
+  /**
+   * Delete a job and all related records
+   * DELETE /jobs/:id
+   */
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @HttpCode(HttpStatus.OK)
+  async deleteJob(@Param('id') jobId: string, @Request() req) {
+    await this.jobService.deleteJob(jobId, req.user.sub);
+
+    return {
+      success: true,
+      message: 'Job and all related records deleted successfully',
     };
   }
 }

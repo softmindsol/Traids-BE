@@ -27,6 +27,7 @@ export class NotificationController {
         const userId = req.user.sub;
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
+        console.log(userId,"userId")
 
         const result = await this.notificationService.getNotificationsByUser(
             userId,

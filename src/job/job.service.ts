@@ -3,8 +3,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Job, JobDocument } from './schema/job.schema';
 import { CreateJobDto } from './dto/create-job.dto';
+import { UpdateJobDto } from './dto/update-job.dto';
 import { S3UploadService } from '../common/service/s3-upload.service';
 import { ComplianceService } from '../compliance/compliance.service';
+import { Offer, OfferDocument } from '../offer/schema/offer.schema';
+import { JobApplication, JobApplicationDocument } from '../job-application/schema/job-application.schema';
+import { Compliance, ComplianceDocument } from '../compliance/schema/compliance.schema';
 import { workerData } from 'worker_threads';
 
 @Injectable()
@@ -13,6 +17,9 @@ export class JobService {
 
   constructor(
     @InjectModel(Job.name) private jobModel: Model<JobDocument>,
+    @InjectModel(Offer.name) private offerModel: Model<OfferDocument>,
+    @InjectModel(JobApplication.name) private applicationModel: Model<JobApplicationDocument>,
+    @InjectModel(Compliance.name) private complianceModel: Model<ComplianceDocument>,
     private s3UploadService: S3UploadService,
     private complianceService: ComplianceService,
   ) { }
@@ -229,6 +236,163 @@ export class JobService {
       }
       throw new HttpException(
         'Failed to start job',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  /**
+   * Update a job
+   * Only the company that created the job can update it
+   * Cannot update jobs that are in_progress or completed
+   */
+  async updateJob(
+    jobId: string,
+    updateJobDto: UpdateJobDto,
+    companyId: string,
+    files?: Express.Multer.File[],
+  ): Promise<JobDocument> {
+    try {
+      // Find the job and verify it exists
+      const job = await this.jobModel.findById(jobId);
+
+      if (!job) {
+        throw new HttpException('Job not found', HttpStatus.NOT_FOUND);
+      }
+
+      // Verify the company owns this job
+      if (job.company.toString() !== companyId) {
+        throw new HttpException(
+          'You do not have permission to update this job',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+
+      // Prevent updating if job is in progress or completed
+      if (job.status === 'in_progress' || job.status === 'completed') {
+        throw new HttpException(
+          `Cannot update job with status: ${job.status}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Handle file uploads if provided
+      let documentUrls: string[] = [];
+      if (files && files.length > 0) {
+        documentUrls = await this.s3UploadService.uploadMultipleFiles(
+          files,
+          'jobs/documents',
+        );
+      }
+
+      // Prepare update object
+      const updateData: any = {};
+
+      if (updateJobDto.jobTitle) updateData.jobTitle = updateJobDto.jobTitle;
+      if (updateJobDto.trade) updateData.trade = updateJobDto.trade;
+      if (updateJobDto.description) updateData.description = updateJobDto.description;
+      if (updateJobDto.siteAddress) updateData.siteAddress = updateJobDto.siteAddress;
+      if (updateJobDto.timelineStartDate) {
+        updateData.timelineStartDate = new Date(updateJobDto.timelineStartDate);
+      }
+      if (updateJobDto.timelineEndDate) {
+        updateData.timelineEndDate = new Date(updateJobDto.timelineEndDate);
+      }
+      if (updateJobDto.hourlyRate !== undefined) updateData.hourlyRate = updateJobDto.hourlyRate;
+      if (updateJobDto.workersRequired !== undefined) {
+        updateData.workersRequired = updateJobDto.workersRequired;
+      }
+
+      // Handle documents
+      if (documentUrls.length > 0) {
+        // Append new documents to existing ones
+        updateData.projectDocuments = [...job.projectDocuments, ...documentUrls];
+      } else if (updateJobDto.documents) {
+        // Replace with provided documents
+        updateData.projectDocuments = updateJobDto.documents;
+      }
+
+      // Update the job
+      const updatedJob = await this.jobModel.findByIdAndUpdate(
+        jobId,
+        updateData,
+        { new: true },
+      )
+        .populate('company', 'companyName workEmail phoneNumber')
+        .populate('assignedTo', 'fullName email primaryTrade')
+        .exec();
+
+      if (!updatedJob) {
+        throw new HttpException('Failed to update job', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      this.logger.log(`Job updated: ${updatedJob.jobTitle} (ID: ${jobId})`);
+
+      return updatedJob;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to update job',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  /**
+   * Delete a job and all related records (offers, applications, compliance)
+   * Only the company that created the job can delete it
+   */
+  async deleteJob(jobId: string, companyId: string): Promise<void> {
+    try {
+      // Find the job and verify it exists
+      const job = await this.jobModel.findById(jobId);
+
+      if (!job) {
+        throw new HttpException('Job not found', HttpStatus.NOT_FOUND);
+      }
+
+      // Verify the company owns this job
+      if (job.company.toString() !== companyId) {
+        throw new HttpException(
+          'You do not have permission to delete this job',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+
+      // Prevent deletion if job is in progress or completed
+      if (job.status === 'in_progress' || job.status === 'completed') {
+        throw new HttpException(
+          `Cannot delete job with status: ${job.status}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      this.logger.log(`Deleting job: ${job.jobTitle} (ID: ${jobId})`);
+
+      // Delete all related offers
+      const deletedOffers = await this.offerModel.deleteMany({ job: jobId });
+      this.logger.log(`Deleted ${deletedOffers.deletedCount} offers for job ${jobId}`);
+
+      // Delete all related job applications
+      const deletedApplications = await this.applicationModel.deleteMany({ job: jobId });
+      this.logger.log(`Deleted ${deletedApplications.deletedCount} applications for job ${jobId}`);
+
+      // Delete compliance record
+      const deletedCompliance = await this.complianceModel.deleteOne({ project: jobId });
+      this.logger.log(`Deleted compliance record for job ${jobId}`);
+
+      // Finally, delete the job itself
+      await this.jobModel.findByIdAndDelete(jobId);
+      this.logger.log(`Job deleted successfully: ${jobId}`);
+
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to delete job',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

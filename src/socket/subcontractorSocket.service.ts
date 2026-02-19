@@ -138,15 +138,17 @@ export class SubcontractorSocketService {
     /**
      * Notify subcontractor about new message
      */
-    notifyNewMessage(
+    async notifyNewMessage(
         subcontractorId: string,
         messageData: {
             conversationId: string;
             senderId: string;
             senderName: string;
             preview: string;
+            messageId?: string;
         },
-    ): void {
+    ): Promise<void> {
+        // Emit socket event
         this.socketGateway.getServer()
             .to(`user:${subcontractorId}`)
             .emit('newMessage', {
@@ -155,6 +157,21 @@ export class SubcontractorSocketService {
                 senderName: messageData.senderName,
                 preview: messageData.preview,
             });
+
+        // Create notification in database
+        await this.notificationService.createNotification({
+            type: 'newMessage',
+            title: 'New Message',
+            message: `${messageData.senderName}: ${messageData.preview}`,
+            senderId: messageData.senderId,
+            senderType: 'company',
+            senderName: messageData.senderName,
+            receiverId: subcontractorId,
+            receiverType: 'subcontractor',
+            relatedEntityId: messageData.messageId,
+            relatedEntityType: 'message',
+            data: { conversationId: messageData.conversationId },
+        });
 
         this.logger.log(`New message notification sent to subcontractor ${subcontractorId}`);
     }

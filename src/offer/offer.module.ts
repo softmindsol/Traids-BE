@@ -9,6 +9,7 @@ import { OfferController } from './offer.controller';
 import { OfferService } from './offer.service';
 import { CommonModule } from '../common/common.module';
 import { ComplianceModule } from '../compliance/compliance.module';
+import { SocketModule } from '../socket/socket.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ComplianceModule } from '../compliance/compliance.module';
     }),
     CommonModule,
     ComplianceModule,
+    SocketModule,
   ],
   controllers: [OfferController],
   providers: [OfferService],

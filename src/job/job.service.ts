@@ -88,6 +88,21 @@ export class JobService {
     }
   }
 
+  async getJobsBySubcontractor(subcontractorId: string): Promise<JobDocument[]> {
+    try {
+      return await this.jobModel
+        .find({ assignedTo: new Types.ObjectId(subcontractorId) })
+        .populate('company', 'companyName workEmail phoneNumber headOfficeAddress profileImage')
+        .sort({ createdAt: -1 })
+        .exec();
+    } catch (error) {
+      throw new HttpException(
+        'Failed to fetch assigned jobs',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async getAllJobsWithFilters(filters: {
     trade?: string;
     maxHourlyRate?: number;

@@ -8,6 +8,8 @@ import { SubcontractorController } from './subcontractor.controller';
 import { CompanySubcontractorService } from './company-subcontractor.service';
 import { CompanySubcontractorController } from './company-subcontractor.controller';
 import { CommonModule } from '../common/common.module';
+import { JobModule } from '../job/job.module';
+import { OfferModule } from '../offer/offer.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { CommonModule } from '../common/common.module';
       signOptions: { expiresIn: '7d' },
     }),
     CommonModule,
+    JobModule,
+    OfferModule,
   ],
   controllers: [SubcontractorController, CompanySubcontractorController],
   providers: [SubcontractorService, CompanySubcontractorService],

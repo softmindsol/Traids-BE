@@ -2,6 +2,7 @@
 import {
   Controller,
   Post,
+  Get,
   Put,
   Body,
   Request,
@@ -14,6 +15,8 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { SubcontractorService } from './subcontractor.service';
+import { JobService } from '../job/job.service';
+import { OfferService } from '../offer/offer.service';
 import { SignUpSubcontractorDto } from './dto/signup-subcontractor.dto';
 import { UpdateSubcontractorDto } from './dto/update-subcontractor.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -22,7 +25,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class SubcontractorController {
   private readonly logger = new Logger(SubcontractorController.name);
 
-  constructor(private readonly subcontractorService: SubcontractorService) { }
+  constructor(
+    private readonly subcontractorService: SubcontractorService,
+    private readonly jobService: JobService,
+    private readonly offerService: OfferService,
+  ) { }
 
   @Post('signup')
   @UseInterceptors(
@@ -94,10 +101,6 @@ export class SubcontractorController {
     try {
       const userId = req.user.sub;
 
-      console.log(userId, "userId");
-      console.log(updateDto, "updateDto");
-      console.log(files, "files");
-
       const updatedProfile = await this.subcontractorService.updateProfile(
         userId,
         updateDto,
@@ -119,6 +122,43 @@ export class SubcontractorController {
       }
       throw new HttpException(
         error.message || 'Failed to update profile',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('bookings')
+  @UseGuards(JwtAuthGuard)
+  async getBookings(@Request() req) {
+    try {
+      const subcontractorId = req.user.sub;
+
+      // Get offers with compliance documents
+      const offers = await this.offerService.getOffersWithComplianceBySubcontractor(subcontractorId);
+
+      // Get jobs where subcontractor is assigned
+      const assignedJobs = await this.jobService.getJobsBySubcontractor(subcontractorId);
+
+      // Filter offers by status
+      const pendingOffers = offers.filter(offer => offer.status === 'pending');
+
+      // Group assigned jobs by status
+      const pendingJobs = assignedJobs.filter(job => job.status === 'pending');
+      const inProgressJobs = assignedJobs.filter(job => job.status === 'in_progress');
+      const completedJobs = assignedJobs.filter(job => job.status === 'completed');
+
+      this.logger.log(`Fetched bookings for subcontractor - ID: ${subcontractorId}`);
+
+      return {
+        offers: pendingOffers,
+        pending: pendingJobs,
+        inProgress: inProgressJobs,
+        completed: completedJobs,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to fetch bookings: ${error.message}`);
+      throw new HttpException(
+        'Failed to fetch bookings',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

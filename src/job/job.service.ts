@@ -73,11 +73,10 @@ export class JobService {
 
   async getJobsByCompany(companyId: string): Promise<JobDocument[]> {
     try {
-      console.log(companyId);
       return await this.jobModel
         .find({ company: new Types.ObjectId(companyId) })
         .populate('company', 'companyName workEmail')
-        .populate('assignedTo', 'firstName lastName email')
+        .populate('assignedTo', 'fullName email')
         .sort({ createdAt: -1 })
         .exec();
     } catch (error) {
@@ -149,10 +148,8 @@ export class JobService {
         query.timelineStartDate = { $gte: filters.startDate };
       }
 
-      console.log('Job query:', JSON.stringify(query));
 
       const total = await this.jobModel.countDocuments(query);
-      console.log('Total jobs found:', total);
 
       const jobs = await this.jobModel
         .find(query)
